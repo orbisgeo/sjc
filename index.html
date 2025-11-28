@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Valor Venal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .currency {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+        .table-header {
+            background-color: #e5e7eb;
+            color: #374151;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .table-row:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        /* Estilo para inputs dentro da tabela */
+        .table-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px;
+            text-align: right;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .table-input:hover {
+            border-color: #d1d5db;
+            background-color: #fff;
+        }
+        .table-input:focus {
+            border-color: #3b82f6;
+            background-color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body onload="init()">
+
+    <div class="min-h-screen py-10 px-4 flex justify-center items-start">
+        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden">
+            
+            <!-- Cabeçalho -->
+            <div class="bg-blue-800 p-6 text-white text-center">
+                <h1 class="text-3xl font-bold flex justify-center items-center gap-2">
+                    <i data-lucide="calculator"></i>
+                    Simulador de Valor Venal
+                </h1>
+                <p class="text-blue-200 mt-2">Cálculo de IPTU e Avaliação Imobiliária</p>
+                
+                <!-- Botão Mapa -->
+                <div class="mt-5">
+                    <a href="mapa_setores.html" target="_blank" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold py-2 px-6 rounded-full transition text-sm backdrop-blur-sm shadow-sm hover:shadow-md">
+                        <i data-lucide="map" class="w-4 h-4"></i> Ver Mapa de Setores
+                    </a>
+                </div>
+            </div>
+
+            <!-- Aviso de Valor Base Editável -->
+            <div class="bg-yellow-50 border-b border-yellow-100 p-4 text-center">
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-2 text-yellow-800 font-semibold text-sm md:text-base">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="settings-2" class="w-4 h-4"></i>
+                        <label for="valorBase">Valor Base de Cálculo do Terreno (R$/m²):</label>
+                    </div>
+                    <input type="number" id="valorBase" value="100" class="w-24 p-1 px-2 text-center rounded text-yellow-900 border border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white shadow-sm" oninput="calcular()">
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row">
+                
+                <!-- Coluna da Esquerda: Formulário -->
+                <div class="w-full lg:w-1/2 p-8 border-b lg:border-b-0 lg:border-r border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <i data-lucide="map-pin" class="text-blue-600"></i> Dados do Terreno
+                    </h2>
+
+                    <!-- Área do Terreno -->
+                    <div class="input-group mb-4">
+                        <label for="areaTerreno" class="block mb-2">Área do Lote (m²)</label>
+                        <input type="number" id="areaTerreno" placeholder="Ex: 300" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition" oninput="calcular()">
+                    </div>
+
+                    <!-- Setor (Preenchido via JS) -->
+                    <div class="input-group mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="setor" class="block">Setor (Fator K)</label>
+                            <!-- Link Rápido para o Mapa -->
+                            <a href="mapa_setores.html" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium hover:underline">
+                                <i data-lucide="map" class="w-3 h-3"></i> Ver no mapa
+                            </a>
+                        </div>
+                        <select id="setor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white" onchange="calcular()">
+                            <!-- Opções geradas dinamicamente -->
+                        </select>
+                    </div>
+
+                    <!-- Pavimentação (Preenchido via JS) -->
+                    <div class="input-group mb-6">
+                        <label for="pavimentacao" class="block mb-2">Tipo de Pavimentação</label>
+                        <select id="pavimentacao" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white" onchange="calcular()">
+                            <!-- Opções geradas dinamicamente -->
+                        </select>
+                    </div>
+
+                    <div class="border-t border-gray-200 my-6"></div>
+
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <i data-lucide="home" class="text-orange-600"></i> Dados da Construção
+                    </h2>
+
+                    <!-- Área Construída -->
+                    <div class="input-group mb-4">
+                        <label for="areaConstruida" class="block mb-2">Área Construída (m²)</label>
+                        <input type="number" id="areaConstruida" placeholder="Ex: 150" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none transition" oninput="calcular()">
+                        <p class="text-xs text-gray-500 mt-1">Deixe 0 se for lote vago.</p>
+                    </div>
+
+                    <!-- Padrão Construtivo (Preenchido via JS) -->
+                    <div class="input-group mb-6">
+                        <label for="padrao" class="block mb-2">Padrão (CUB)</label>
+                        <select id="padrao" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none bg-white" onchange="calcular()">
+                            <!-- Opções geradas dinamicamente -->
+                        </select>
+                    </div>
+
+                    <button onclick="calcular()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg shadow-md transition transform hover:scale-[1.02] flex justify-center items-center gap-2 text-lg">
+                        <i data-lucide="check-circle"></i> Calcular Valor Venal
+                    </button>
+                </div>
+
+                <!-- Coluna da Direita: Resultados -->
+                <div class="w-full lg:w-1/2 p-8 bg-gray-50 flex flex-col justify-center relative">
+                    
+                    <div id="resultado-box" class="opacity-50 pointer-events-none transition-opacity duration-500">
+                        <h3 class="text-gray-500 uppercase tracking-widest text-sm font-semibold mb-4 text-center">Detalhamento da Avaliação</h3>
+
+                        <!-- Card Terreno -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500 mb-4">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-gray-600 font-medium text-sm">Valor Venal do Terreno (VVT)</span>
+                                <i data-lucide="land-plot" class="text-blue-200 h-6 w-6"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-800 currency" id="vvt-display">R$ 0,00</div>
+                            <div class="text-xs text-gray-400 mt-2 border-t pt-2">
+                                <span id="detalhe-terreno">Base x Área x Fatores</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Construção -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-orange-500 mb-6">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-gray-600 font-medium text-sm">Valor Venal da Construção (VVC)</span>
+                                <i data-lucide="brick-wall" class="text-orange-200 h-6 w-6"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-800 currency" id="vvc-display">R$ 0,00</div>
+                            <div class="text-xs text-gray-400 mt-2 border-t pt-2">
+                                <span id="detalhe-construcao">Área x Valor m²</span>
+                            </div>
+                        </div>
+
+                        <!-- Total -->
+                        <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-white transform scale-105">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-300 font-medium uppercase text-sm">Valor Venal Total</span>
+                                <span class="bg-green-500 text-xs font-bold px-2 py-1 rounded text-white">FINAL</span>
+                            </div>
+                            <div class="text-4xl font-bold currency text-green-400" id="total-display">R$ 0,00</div>
+                            <p class="text-gray-400 text-xs mt-2">Soma do VVT + VVC</p>
+                        </div>
+                    </div>
+
+                    <div id="empty-state" class="text-center text-gray-400 py-12 absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
+                        <i data-lucide="calculator" class="w-16 h-16 mb-4 opacity-20"></i>
+                        <p class="opacity-50">Preencha os dados e clique em Calcular.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Seção de Tabelas de Referência (Editáveis) -->
+            <div class="bg-gray-100 border-t border-gray-200 p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-700 flex items-center gap-2">
+                        <i data-lucide="table" class="text-gray-500"></i> Tabelas de Referência
+                    </h3>
+                    <span class="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-semibold">EDITÁVEL</span>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Tabela Setores -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                        <div class="bg-blue-600 text-white px-4 py-2 text-sm font-bold flex justify-between">
+                            <span>Fator K (Setores)</span>
+                            <i data-lucide="edit-2" class="w-4 h-4 opacity-75"></i>
+                        </div>
+                        <div class="overflow-y-auto max-h-64">
+                            <table class="w-full text-sm text-left">
+                                <thead class="table-header sticky top-0 z-10">
+                                    <tr><th class="px-4 py-2">Setor</th><th class="px-4 py-2 text-right">Fator</th></tr>
+                                </thead>
+                                <tbody id="tbody-setores" class="text-gray-600">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Pavimentação -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 h-fit">
+                        <div class="bg-gray-600 text-white px-4 py-2 text-sm font-bold flex justify-between">
+                            <span>Pavimentação</span>
+                            <i data-lucide="edit-2" class="w-4 h-4 opacity-75"></i>
+                        </div>
+                        <table class="w-full text-sm text-left">
+                            <thead class="table-header">
+                                <tr><th class="px-4 py-2">Tipo</th><th class="px-4 py-2 text-right">Fator</th></tr>
+                            </thead>
+                            <tbody id="tbody-pavimentacao" class="text-gray-600">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabela CUB -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200 h-fit">
+                        <div class="bg-orange-600 text-white px-4 py-2 text-sm font-bold flex justify-between">
+                            <span>Padrão (CUB)</span>
+                            <i data-lucide="edit-2" class="w-4 h-4 opacity-75"></i>
+                        </div>
+                        <table class="w-full text-sm text-left">
+                            <thead class="table-header">
+                                <tr><th class="px-4 py-2">Padrão</th><th class="px-4 py-2 text-right">Valor/m²</th></tr>
+                            </thead>
+                            <tbody id="tbody-cub" class="text-gray-600">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Dados Iniciais
+        const dadosReferencia = {
+            setores: [
+                { nome: 'Setor 1', valor: 0.90 },
+                { nome: 'Setor 2', valor: 0.85 },
+                { nome: 'Setor 3', valor: 0.50 },
+                { nome: 'Setor 4', valor: 0.55 },
+                { nome: 'Setor 5', valor: 0.10 },
+                { nome: 'Setor 6', valor: 0.45 },
+                { nome: 'Setor 7', valor: 0.10 },
+                { nome: 'Setor 8', valor: 0.40 },
+                { nome: 'Setor 9', valor: 0.70 },
+                { nome: 'Setor 10', valor: 0.70 },
+                { nome: 'Setor 11', valor: 1.00 },
+                { nome: 'Setor 12', valor: 0.75 },
+                { nome: 'Setor 13', valor: 0.70 },
+                { nome: 'Setor 14', valor: 0.60 },
+                { nome: 'Setor 15', valor: 0.35 },
+            ],
+            pavimentacao: [
+                { nome: '1 - Asfalto', valor: 1.0 },
+                { nome: '2 - Paralelepípedo', valor: 0.9 },
+                { nome: '3 - Semi-Pavim.', valor: 0.8 },
+                { nome: '4 - Sem Pavim.', valor: 0.7 },
+            ],
+            cub: [
+                { nome: 'Baixo', valor: 1000 },
+                { nome: 'Normal', valor: 1500 },
+                { nome: 'Alto', valor: 2000 },
+                { nome: 'Luxo', valor: 2500 },
+            ]
+        };
+
+        function init() {
+            lucide.createIcons();
+            renderizarTabelas();
+            renderizarSelects();
+        }
+
+        // Função para atualizar os dados quando o usuário edita a tabela
+        function atualizarDado(categoria, index, novoValor) {
+            const valorNumerico = parseFloat(novoValor);
+            if (!isNaN(valorNumerico)) {
+                dadosReferencia[categoria][index].valor = valorNumerico;
+                // Re-renderiza os selects para refletir o novo valor nas opções
+                renderizarSelects();
+                // Recalcula imediatamente
+                calcular();
+            }
+        }
+
+        function renderizarTabelas() {
+            // Render Setores
+            const tbodySetores = document.getElementById('tbody-setores');
+            tbodySetores.innerHTML = dadosReferencia.setores.map((item, idx) => `
+                <tr class="table-row">
+                    <td class="px-4 py-1">${item.nome}</td>
+                    <td class="px-4 py-1">
+                        <input type="number" step="0.01" value="${item.valor}" 
+                            class="table-input"
+                            oninput="atualizarDado('setores', ${idx}, this.value)">
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render Pavimentacao
+            const tbodyPav = document.getElementById('tbody-pavimentacao');
+            tbodyPav.innerHTML = dadosReferencia.pavimentacao.map((item, idx) => `
+                <tr class="table-row">
+                    <td class="px-4 py-2">${item.nome}</td>
+                    <td class="px-4 py-2">
+                         <input type="number" step="0.1" value="${item.valor}" 
+                            class="table-input"
+                            oninput="atualizarDado('pavimentacao', ${idx}, this.value)">
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render CUB
+            const tbodyCub = document.getElementById('tbody-cub');
+            tbodyCub.innerHTML = dadosReferencia.cub.map((item, idx) => `
+                <tr class="table-row">
+                    <td class="px-4 py-2">${item.nome}</td>
+                    <td class="px-4 py-2">
+                        <input type="number" step="10" value="${item.valor}" 
+                            class="table-input"
+                            oninput="atualizarDado('cub', ${idx}, this.value)">
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarSelects() {
+            // Salva as seleções atuais para restaurar após renderizar (caso o usuário já tenha escolhido algo)
+            const selSetor = document.getElementById('setor');
+            const selPav = document.getElementById('pavimentacao');
+            const selPadrao = document.getElementById('padrao');
+
+            const idxSetor = selSetor.selectedIndex >= 0 ? selSetor.selectedIndex : 10; // Default Setor 11
+            const idxPav = selPav.selectedIndex >= 0 ? selPav.selectedIndex : 0;
+            const idxPadrao = selPadrao.selectedIndex >= 0 ? selPadrao.selectedIndex : 1;
+
+            // Popula Setores
+            selSetor.innerHTML = dadosReferencia.setores.map(item => 
+                `<option value="${item.valor}">${item.nome} (Fator ${item.valor})</option>`
+            ).join('');
+            selSetor.selectedIndex = idxSetor;
+
+            // Popula Pavimentação
+            selPav.innerHTML = dadosReferencia.pavimentacao.map(item => 
+                `<option value="${item.valor}">${item.nome} (Fator ${item.valor})</option>`
+            ).join('');
+            selPav.selectedIndex = idxPav;
+
+            // Popula CUB
+            selPadrao.innerHTML = dadosReferencia.cub.map(item => 
+                `<option value="${item.valor}">${item.nome} (${formatarMoeda(item.valor)}/m²)</option>`
+            ).join('');
+            selPadrao.selectedIndex = idxPadrao;
+        }
+
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function calcular() {
+            // Inputs Terreno
+            const areaTerreno = parseFloat(document.getElementById('areaTerreno').value) || 0;
+            // Pegamos o valor diretamente do select, que já contém o fator atualizado da tabela
+            const fatorSetor = parseFloat(document.getElementById('setor').value);
+            const fatorPavimentacao = parseFloat(document.getElementById('pavimentacao').value);
+            
+            // Valor Base editável
+            const valorBaseTerrenoM2 = parseFloat(document.getElementById('valorBase').value) || 0;
+
+            // Cálculo VVT (Valor Venal Terreno)
+            const vvt = areaTerreno * fatorSetor * fatorPavimentacao * valorBaseTerrenoM2;
+
+            // Inputs Construção
+            const areaConstruida = parseFloat(document.getElementById('areaConstruida').value) || 0;
+            const valorM2Construcao = parseFloat(document.getElementById('padrao').value);
+
+            // Cálculo VVC (Valor Venal Construção)
+            const vvc = areaConstruida * valorM2Construcao;
+
+            // Total
+            const total = vvt + vvc;
+
+            // Atualizar UI
+            document.getElementById('vvt-display').innerText = formatarMoeda(vvt);
+            document.getElementById('vvc-display').innerText = formatarMoeda(vvc);
+            document.getElementById('total-display').innerText = formatarMoeda(total);
+
+            // Atualizar detalhes matemáticos (texto pequeno)
+            document.getElementById('detalhe-terreno').innerHTML = 
+                `${areaTerreno}m² &times; Setor(${fatorSetor}) &times; Pav(${fatorPavimentacao}) &times; ${formatarMoeda(valorBaseTerrenoM2)}`;
+            
+            document.getElementById('detalhe-construcao').innerHTML = 
+                `${areaConstruida}m² &times; ${formatarMoeda(valorM2Construcao)}/m²`;
+
+            // Animação de exibição
+            const resultBox = document.getElementById('resultado-box');
+            const emptyState = document.getElementById('empty-state');
+            
+            if(emptyState) emptyState.style.display = 'none';
+            resultBox.classList.remove('opacity-50', 'pointer-events-none');
+            resultBox.classList.add('opacity-100');
+        }
+    </script>
+</body>
+</html>
