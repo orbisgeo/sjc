@@ -5,20 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Setores - São José do Cerrito</title>
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Ícones Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://unpkg.com/tokml@0.4.0/tokml.js"></script>
 
     <style>
         body { margin: 0; padding: 0; }
         #map { height: 100vh; width: 100%; z-index: 1; }
         
-        /* Controle customizado flutuante */
+        /* Controles Flutuantes */
         .custom-controls {
             position: absolute;
             top: 20px;
@@ -54,12 +53,21 @@
             transform: translateY(0);
         }
 
+        /* Cores dos botões */
         .control-btn.primary {
             background-color: #2563eb;
             color: white;
         }
         .control-btn.primary:hover {
             background-color: #1d4ed8;
+        }
+
+        .control-btn.success {
+            background-color: #059669;
+            color: white;
+        }
+        .control-btn.success:hover {
+            background-color: #047857;
         }
 
         /* Estilo do Popup */
@@ -77,7 +85,7 @@
             font-weight: 800;
             color: #333;
             text-align: center;
-            /* Contorno branco para legibilidade sobre o mapa */
+            /* Contorno branco para legibilidade */
             text-shadow: 
                 -1px -1px 0 #fff,  
                  1px -1px 0 #fff,
@@ -88,65 +96,76 @@
 </head>
 <body>
 
-    <!-- Container do Mapa -->
     <div id="map"></div>
 
-    <!-- Controles Flutuantes -->
     <div class="custom-controls">
-        <button onclick="centralizarSetores()" class="control-btn primary" title="Ver todos os setores">
+        <button onclick="centralizarSetores()" class="control-btn primary" title="Focar no mapa completo">
             <i data-lucide="map"></i>
-            Ir para São José do Cerrito (Setores)
+            Centralizar Mapa
         </button>
         
         <button onclick="minhaLocalizacao()" class="control-btn" title="Onde estou?">
             <i data-lucide="crosshair"></i>
             Minha Localização
         </button>
+
+        <button onclick="exportarKML()" class="control-btn success" title="Baixar contornos em KML">
+            <i data-lucide="download"></i>
+            Exportar KML (Linhas)
+        </button>
     </div>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // Inicializa ícones
+        // Inicializa ícones Lucide
         lucide.createIcons();
 
-        // 1. Inicializar o mapa (Coordenadas iniciais aproximadas de SC, ajustaremos depois)
-        const map = L.map('map').setView([-27.6627, -50.5714], 13);
+        // 1. Configuração do Mapa
+        const map = L.map('map').setView([-27.6627, -50.5714], 13); // Coordenadas aprox. São José do Cerrito
 
-        // 2. Adicionar camada de tiles (OpenStreetMap)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Variável para guardar a camada GeoJSON
+        // Variáveis globais
         let setoresLayer;
+        let layerSelecionado = null; // Rastreia qual setor está destacado
 
-        // 3. Carregar o GeoJSON
+        // 2. Estilos
+        function estiloPadrao(feature) {
+            return {
+                color: "#ff7800", // Laranja
+                weight: 2,
+                opacity: 0.65,
+                fillOpacity: 0.2
+            };
+        }
+
+        function estiloDestaque() {
+            return {
+                color: "#2563eb", // Azul forte
+                weight: 5,        // Borda grossa
+                opacity: 1,
+                fillOpacity: 0.5  // Preenchimento mais visível
+            };
+        }
+
+        // 3. Carregamento do GeoJSON
         fetch('setores.geojson')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error("Erro ao carregar o arquivo GeoJSON");
-                }
+                if (!response.ok) throw new Error("Erro ao carregar o arquivo GeoJSON");
                 return response.json();
             })
             .then(data => {
-                // Adiciona o GeoJSON ao mapa
                 setoresLayer = L.geoJSON(data, {
-                    style: function(feature) {
-                        return {
-                            color: "#ff7800",
-                            weight: 2,
-                            opacity: 0.65,
-                            fillOpacity: 0.2
-                        };
-                    },
+                    style: estiloPadrao,
                     onEachFeature: function(feature, layer) {
-                        // Tenta encontrar uma propriedade que sirva como ID ou Rótulo
+                        
+                        // A. Determinar Rótulo (Tenta achar uma propriedade válida)
                         let labelText = "";
                         if (feature.properties) {
-                            // Prioridade: codigo -> id -> ID -> nome -> name
                             labelText = feature.properties.codigo || 
                                         feature.properties.id || 
                                         feature.properties.ID || 
@@ -155,14 +174,14 @@
                                         "Setor";
                         }
 
-                        // Configura o Rótulo Fixo (Tooltip permanente)
+                        // B. Adicionar Tooltip Permanente
                         layer.bindTooltip(String(labelText), {
-                            permanent: true,      // Sempre visível
-                            direction: "center",  // No centro do polígono
-                            className: "setor-label" // Classe CSS customizada
+                            permanent: true,
+                            direction: "center",
+                            className: "setor-label"
                         });
 
-                        // Popup simples com propriedades (mantido)
+                        // C. Adicionar Popup com Detalhes
                         if (feature.properties) {
                             let popupContent = "<strong>Detalhes do Setor</strong><br>";
                             for (const [key, value] of Object.entries(feature.properties)) {
@@ -170,48 +189,117 @@
                             }
                             layer.bindPopup(popupContent);
                         }
+
+                        // D. Evento de Clique (Lógica de Destaque)
+                        layer.on('click', function(e) {
+                            // Resetar o anterior
+                            if (layerSelecionado) {
+                                setoresLayer.resetStyle(layerSelecionado);
+                            }
+
+                            // Aplicar estilo no atual
+                            layer.setStyle(estiloDestaque());
+
+                            // Trazer para frente (para a borda grossa sobrepor os vizinhos)
+                            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                                layer.bringToFront();
+                            }
+
+                            // Atualizar referência
+                            layerSelecionado = layer;
+                        });
                     }
                 }).addTo(map);
 
-                // Centraliza automaticamente ao carregar
+                // Centralizar assim que carregar
                 centralizarSetores();
             })
             .catch(error => {
                 console.error('Erro:', error);
-                alert('Não foi possível carregar o arquivo "setores.geojson". Verifique se ele está na mesma pasta.');
+                alert('Não foi possível carregar "setores.geojson". Verifique se o arquivo está na pasta.');
             });
 
-        // Função: Ir para São José do Cerrito (Zoom no Layer)
+        // 4. Funções de Controle
+
         function centralizarSetores() {
             if (setoresLayer && setoresLayer.getBounds().isValid()) {
-                map.fitBounds(setoresLayer.getBounds(), {
-                    padding: [50, 50],
-                    animate: true,
-                    duration: 1.5
-                });
+                map.fitBounds(setoresLayer.getBounds(), { padding: [50, 50], animate: true, duration: 1.5 });
             } else {
-                // Fallback se o layer ainda não carregou: Centro de São José do Cerrito
                 map.flyTo([-27.6627, -50.5714], 14);
             }
         }
 
-        // Função: Minha Localização
         function minhaLocalizacao() {
             map.locate({setView: true, maxZoom: 16});
         }
 
-        // Eventos de localização do Leaflet
+        // Função Especial: Exportar KML transformando Polígonos em Linhas
+        function exportarKML() {
+            if (!setoresLayer) {
+                alert("O mapa ainda não foi carregado.");
+                return;
+            }
+
+            // Pega o GeoJSON original
+            const geoJsonOriginal = setoresLayer.toGeoJSON();
+
+            // Cria um novo GeoJSON modificado
+            const geoJsonLinhas = {
+                type: "FeatureCollection",
+                features: geoJsonOriginal.features.map(feature => {
+                    // Clone para não afetar o mapa visual
+                    const f = JSON.parse(JSON.stringify(feature));
+
+                    // TRUQUE: Mudar o tipo de geometria para que o KML entenda como caminho/linha
+                    if (f.geometry.type === 'Polygon') {
+                        f.geometry.type = 'MultiLineString';
+                    } 
+                    else if (f.geometry.type === 'MultiPolygon') {
+                        // Se for MultiPolygon, "achata" para MultiLineString
+                        f.geometry.type = 'MultiLineString';
+                        f.geometry.coordinates = f.geometry.coordinates.flat(1);
+                    }
+
+                    return f;
+                })
+            };
+
+            try {
+                // Converte para String KML
+                const kmlString = tokml(geoJsonLinhas, {
+                    documentName: "Setores (Linhas) - São José do Cerrito",
+                    name: "codigo" // Tenta usar propriedade 'codigo' como nome no Google Earth
+                });
+
+                // Cria o Download
+                const blob = new Blob([kmlString], { type: "application/vnd.google-earth.kml+xml" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "setores_contornos.kml";
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpeza
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error("Erro na exportação:", error);
+                alert("Erro ao gerar o KML.");
+            }
+        }
+
+        // Eventos de Localização do Leaflet
         map.on('locationfound', function(e) {
             const radius = e.accuracy / 2;
-            
-            L.marker(e.latlng).addTo(map)
-                .bindPopup("Você está aqui! (Precisão de " + radius + " metros)").openPopup();
-
+            L.marker(e.latlng).addTo(map).bindPopup("Você está aqui!").openPopup();
             L.circle(e.latlng, radius).addTo(map);
         });
 
         map.on('locationerror', function(e) {
-            alert("Não foi possível acessar sua localização: " + e.message);
+            alert("Não foi possível acessar sua localização.");
         });
 
     </script>
