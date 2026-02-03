@@ -3,753 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora PGV - São José do Cerrito (Totalmente Editável)</title>
+    <title>ORBIS TRIB - São José do Cerrito (LC 07/2006)</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
-        .currency {
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-        }
+        /* --- ESTILOS DA INTERFACE (SISTEMA) --- */
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: #f8fafc; color: #1e293b; }
         
-        /* Estilos da Interface da Calculadora */
-        .input-inline-edit {
-            background-color: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            padding: 0.25rem 0.5rem;
-            font-weight: bold;
-            text-align: center;
-            width: 140px;
-            transition: all 0.2s;
-        }
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #4f46e5; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #4f46e5; }
+        
+        /* Inputs */
+        .input-focus:focus { ring: 2px; ring-color: #6366f1; border-color: #6366f1; outline: none; }
 
-        .input-inline-edit:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .badge-editavel {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .badge-aliquota {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-        
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            width: 90%;
-            max-width: 1000px;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        /* --- ESTILOS DA MINUTA (MODELO JURÍDICO) --- */
-        .minuta-legal {
+        /* --- ESTILOS DO DOCUMENTO JURÍDICO (IMPRESSÃO) --- */
+        .juridico-doc {
             font-family: 'Times New Roman', Times, serif;
             font-size: 12pt;
             line-height: 1.5;
             color: #000;
             text-align: justify;
-            padding: 2cm 2.5cm; /* Margens padrão A4 */
             background: white;
-        }
-
-        .minuta-legal h2 {
-            text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 20px;
-            font-size: 14pt;
-        }
-
-        .minuta-legal h3 {
-            text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-top: 25px;
-            margin-bottom: 15px;
-            font-size: 12pt;
+            padding: 2.5cm 2cm 2cm 3cm; /* Margens ABNT/Oficial */
+            max-width: 21cm;
+            margin: 0 auto;
         }
         
-        .minuta-legal h4 {
-            font-weight: bold;
-            font-style: italic;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 12pt;
-        }
-
-        .minuta-legal p {
-            margin-bottom: 15px;
-            text-indent: 2cm; /* Recuo de parágrafo ABNT */
-        }
-
-        .minuta-legal .ementa {
-            margin-left: 8cm;
-            margin-bottom: 30px;
-            font-style: italic;
-            font-size: 10pt;
-            text-align: justify;
-        }
-
-        .minuta-legal .artigo {
-            font-weight: bold;
-        }
-
-        .minuta-legal .inciso {
-            padding-left: 2cm;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .minuta-legal table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 11pt;
-        }
-
-        .minuta-legal th, .minuta-legal td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: center;
-        }
-
-        .minuta-legal th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
-
-        .minuta-legal tr td:first-child {
-            text-align: left;
-            padding-left: 10px;
-        }
-
-        .assinatura {
-            margin-top: 50px;
-            text-align: center;
-        }
+        .juridico-header { text-align: center; margin-bottom: 30px; }
+        .juridico-header img { width: 80px; margin-bottom: 10px; }
+        .juridico-header h1 { font-size: 14pt; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .juridico-header p { font-size: 12pt; font-style: italic; margin: 0; }
         
+        .ementa { margin-left: 8cm; margin-bottom: 25px; font-style: italic; font-size: 10pt; text-align: justify; }
+        
+        .juridico-doc h2 { font-size: 12pt; font-weight: bold; text-align: center; margin: 30px 0 15px 0; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 2px;}
+        .juridico-doc h3 { font-size: 12pt; font-weight: bold; font-style: italic; margin-top: 20px; margin-bottom: 10px; }
+        .juridico-doc p { text-indent: 2.5cm; margin-bottom: 10px; }
+        
+        .artigo { font-weight: bold; }
+
+        /* Tabelas Oficiais */
+        .tabela-legal { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10pt; page-break-inside: avoid; }
+        .tabela-legal th, .tabela-legal td { border: 1px solid #000; padding: 5px; text-align: center; }
+        .tabela-legal th { background-color: #f3f3f3; font-weight: bold; text-align: left; padding-left: 10px; }
+        .tabela-legal td:first-child { text-align: left; padding-left: 10px; }
+        .tabela-legal td:last-child { width: 80px; font-weight: bold; text-align: center; }
+
+        /* Fórmula Box */
         .formula-box {
-            text-align: center;
-            font-weight: bold; 
-            background: #f9f9f9; 
-            padding: 10px;
-            border: 1px dashed #ccc;
-            margin: 10px 2cm;
+            text-align: center; font-weight: bold; background: #fdfdfd; border: 1px solid #000;
+            padding: 10px; margin: 15px 1.5cm; font-family: 'Courier New', monospace; font-size: 11pt;
         }
 
-        /* Configuração de Impressão */
+        /* IMPRESSÃO */
         @media print {
             body * { visibility: hidden; }
-            .modal { display: block; position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; z-index: 9999; }
-            .modal-content { margin: 0; width: 100%; max-width: none; box-shadow: none; border: none; }
-            .minuta-legal, .minuta-legal * { visibility: visible; }
-            .minuta-legal { position: absolute; left: 0; top: 0; width: 100%; padding: 2cm; margin: 0; }
-            
-            /* Esconder botões do modal na impressão */
+            #modal-minuta, #modal-minuta * { visibility: visible; }
+            #modal-minuta { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+            .juridico-doc { width: 100%; max-width: none; padding: 0; box-shadow: none; margin: 0; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 opacity-10 rounded-full -mr-32 -mt-32"></div>
-            <div class="relative">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div class="mb-6 md:mb-0">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-white/20 p-3 rounded-xl">
-                                <i data-lucide="calculator" class="w-8 h-8"></i>
-                            </div>
-                            <div>
-                                <h1 class="text-3xl font-bold">Calculadora PGV Oficial</h1>
-                                <p class="text-blue-200 text-lg">São José do Cerrito - SC</p>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-3 mt-4">
-                            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                                <i data-lucide="file-text" class="w-4 h-4"></i>
-                                <span class="text-sm">Lei Municipal PGV nº ____/2025</span>
-                            </div>
-                            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                <span class="text-sm font-bold text-yellow-300">MODO EDIÇÃO TOTAL</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 min-w-[300px]">
-                        <h3 class="font-bold text-white mb-4 flex items-center gap-2">
-                            <i data-lucide="settings" class="w-5 h-5"></i>
-                            CONFIGURAÇÕES GERAIS
-                        </h3>
-                        
-                        <div class="mb-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-medium text-blue-100">VALOR DA UFSC (R$)</label>
-                                <span class="badge-editavel">EDITÁVEL</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <input type="number" id="ufsc-valor" value="4.47" step="0.01" 
-                                       class="flex-1 p-3 text-center text-lg font-bold bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
-                            </div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-medium text-blue-100">VALOR BASE (UFSC/m²)</label>
-                                <span class="badge-aliquota">EDITÁVEL</span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <input type="number" id="valor-base-ufsc" value="103" step="0.01" 
-                                       class="flex-1 p-3 text-center text-lg font-bold bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent">
-                            </div>
-                            <div class="mt-2 text-xs text-blue-300 text-center">
-                                <span id="valor-base-info">103 UFSC/m² = R$ 100,00/m²</span>
-                            </div>
-                        </div>
-                    </div>
+<body class="pb-16">
+
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-md border-b-4 border-indigo-500">
+        <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded shadow">
+                    <i data-lucide="scale" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">ORBIS TRIB  - Gestão tributária</h1>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">LC 07/2006</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 bg-white/10 p-2 rounded-lg border border-white/20 shadow-inner">
+                <div class="text-center">
+                    <label class="block text-[9px] uppercase font-bold text-emerald-300">Valor UFM (R$)</label>
+                    <input type="number" id="cfg-ufm" value="4.35" step="0.01" class="w-20 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-emerald-500 input-focus" oninput="calcular()">
+                </div>
+                <div class="w-px bg-white/20"></div>
+                <div class="text-center">
+                    <label class="block text-[9px] uppercase font-bold text-blue-300">Base Terreno (UFM)</label>
+                    <input type="number" id="cfg-base-ufm" value="75.58" step="0.10" class="w-24 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-blue-500 input-focus" oninput="calcular()">
                 </div>
             </div>
         </div>
+    </nav>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-blue-100 p-2 rounded-lg">
-                                <i data-lucide="square" class="w-6 h-6 text-blue-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">1. ÁREA DO TERRENO</h2>
-                        </div>
-                        <div class="relative">
-                            <input type="number" id="area-terreno" placeholder="Ex: 300" 
-                                   class="w-full p-4 text-2xl text-center font-bold text-gray-800 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all">
-                            <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
-                                <span class="text-gray-500 font-medium">m²</span>
-                            </div>
-                        </div>
+    <div class="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-7 space-y-5">
+
+            <div class="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+                <div class="bg-indigo-50 p-3 border-b border-indigo-100 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="map" class="w-5 h-5 text-indigo-700"></i>
+                        <h2 class="font-bold text-indigo-900 text-sm uppercase">1. Dados do Terreno (VVT)</h2>
                     </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-purple-100 p-2 rounded-lg">
-                                <i data-lucide="map" class="w-6 h-6 text-purple-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">2. SETOR FISCAL (Ks)</h2>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm text-gray-500 mb-1 block">Predefinições (Referência)</label>
-                                <select id="setor-fiscal" class="w-full p-2 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                                <option value="0.75">Setor 1 (Ponta Oeste) - Ks = 0,75</option>
-                                <option value="1.00" selected>Setor 2 (Centro Comercial) - Ks = 1,00</option>
-                                <option value="0.70">Setor 3 (Sudoeste) - Ks = 0,70</option>
-                                <option value="0.60">Setor 4 (Borda de Mata) - Ks = 0,60</option>
-                                <option value="0.65">Setor 5 (Transição Sul/Rio) - Ks = 0,65</option>
-                                <option value="0.15">Setor 6 (APP/Preservação) - Ks = 0,15</option>
-                                <option value="0.55">Setor 7 (Industrial/Logístico) - Ks = 0,55</option>
-                                <option value="0.30">Setor 8 (Cinturão Rural/Sul) - Ks = 0,30</option>
-                                <option value="0.85">Setor 9 (Eixo de Conexão) - Ks = 0,85</option>
-                                <option value="0.60">Setor 10 (Expansão Nordeste) - Ks = 0,60</option>
-                                <option value="0.90">Setor 11 (Residencial Nobre Leste) - Ks = 0,90</option>
-                                <option value="0.50">Setor 12 (Vazio Urbano/Gleba) - Ks = 0,50</option>
-                                <option value="0.80">Setor 13 (Bairro Norte) - Ks = 0,80</option>
-                                <option value="0.60">Setor 14 (ZEIS - Interesse Social) - Ks = 0,60</option>
-                                <option value="0.95">Setor 15 (Centro Expandido) - Ks = 0,95</option>                                </select>
-                            </div>
-                            <div class="p-4 bg-purple-50 rounded-lg border border-purple-200 flex justify-between items-center">
-                                <span class="text-purple-700 font-medium">Fator Ks Aplicado:</span>
-                                <input type="number" id="ks-input" value="1.00" step="0.01" 
-                                       class="input-inline-edit text-purple-800 text-lg">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-green-100 p-2 rounded-lg">
-                                <i data-lucide="road" class="w-6 h-6 text-green-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">3. PAVIMENTAÇÃO (Kp)</h2>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm text-gray-500 mb-1 block">Predefinições (Referência)</label>
-                                <select id="pavimentacao" class="w-full p-2 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                                    <option value="1.00" selected>Via asfaltada - Kp = 1,00</option>
-                                    <option value="0.90">Paralelepípedo/blocos - Kp = 0,90</option>
-                                    <option value="0.75">Via não pavimentada - Kp = 0,75</option>
-                                </select>
-                            </div>
-                            <div class="p-4 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center">
-                                <span class="text-green-700 font-medium">Fator Kp Aplicado:</span>
-                                <input type="number" id="kp-input" value="1.00" step="0.01" 
-                                       class="input-inline-edit text-green-800 text-lg">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-orange-100 p-2 rounded-lg">
-                                <i data-lucide="mountain" class="w-6 h-6 text-orange-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">4. DECLIVIDADE (Kd)</h2>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm text-gray-500 mb-1 block">Predefinições (Referência)</label>
-                                <select id="declividade" class="w-full p-2 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                                    <option value="1.00" selected>Plano (0-3%) - Kd = 1,00</option>
-                                    <option value="0.90">Suave ondulado (3-8%) - Kd = 0,90</option>
-                                    <option value="0.80">Ondulado (8-20%) - Kd = 0,80</option>
-                                    <option value="0.70">Forte ondulado (20-45%) - Kd = 0,70</option>
-                                    <option value="0.60">Montanhoso (45-75%) - Kd = 0,60</option>
-                                    <option value="0.50">Escarpado (>75%) - Kd = 0,50</option>
-                                </select>
-                            </div>
-                            <div class="p-4 bg-orange-50 rounded-lg border border-orange-200 flex justify-between items-center">
-                                <span class="text-orange-700 font-medium">Fator Kd Aplicado:</span>
-                                <input type="number" id="kd-input" value="1.00" step="0.01" 
-                                       class="input-inline-edit text-orange-800 text-lg">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-red-100 p-2 rounded-lg">
-                                <i data-lucide="home" class="w-6 h-6 text-red-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">5. ÁREA CONSTRUÍDA</h2>
-                        </div>
-                        <div class="relative">
-                            <input type="number" id="area-construida" placeholder="Ex: 150" 
-                                   class="w-full p-4 text-2xl text-center font-bold text-gray-800 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all">
-                            <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
-                                <span class="text-gray-500 font-medium">m²</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="bg-indigo-100 p-2 rounded-lg">
-                                <i data-lucide="building" class="w-6 h-6 text-indigo-600"></i>
-                            </div>
-                            <h2 class="text-xl font-bold text-gray-800">6. PADRÃO (VUB)</h2>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm text-gray-500 mb-1 block">Predefinições (Referência)</label>
-                                <select id="padrao-construtivo" class="w-full p-2 text-sm border border-gray-300 rounded-lg bg-gray-50">
-                                    <option value="224.72">Baixo - 224,72 UFSC/m²</option>
-                                    <option value="337.08" selected>Normal - 337,08 UFSC/m²</option>
-                                    <option value="449.44">Alto - 449,44 UFSC/m²</option>
-                                    <option value="561.80">Luxo - 561,80 UFSC/m²</option>
-                                </select>
-                            </div>
-                            <div class="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-indigo-700 font-medium">VUB Aplicado (UFSC):</span>
-                                    <input type="number" id="vub-input" value="337.08" step="0.01" 
-                                           class="input-inline-edit text-indigo-800 text-lg">
-                                </div>
-                                <div class="text-right text-sm text-indigo-600 font-medium" id="vub-reais-preview">
-                                    = R$ 1.500,00/m²
-                                </div>
-                            </div>
+                    <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-indigo-200">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Gleba?</span>
+                        <div class="relative inline-block w-8 h-4 align-middle select-none">
+                            <input type="checkbox" id="toggle-gleba" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300 transition-all duration-300" onclick="toggleGleba()"/>
+                            <label for="toggle-gleba" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-300 cursor-pointer transition-colors duration-300"></label>
                         </div>
                     </div>
                 </div>
+                
+                <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Área Total (A<sub>t</sub>)</label>
+                        <div class="relative">
+                            <input type="number" id="in-at" class="w-full text-lg font-bold p-2 border border-slate-300 rounded outline-none input-focus text-slate-700" placeholder="0.00" oninput="calcular()">
+                            <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">m²</span>
+                        </div>
+                    </div>
 
-                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <button onclick="calcularValorVenal()" 
-                            class="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold py-5 px-6 rounded-xl shadow-xl transition-all transform hover:scale-[1.02] hover:shadow-2xl flex justify-center items-center gap-4 text-xl">
-                        <i data-lucide="calculator" class="w-7 h-7"></i>
-                        CALCULAR AGORA
-                    </button>
-                    
-                    <button onclick="gerarMinuta()" 
-                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-5 px-6 rounded-xl shadow-xl transition-all transform hover:scale-[1.02] hover:shadow-2xl flex justify-center items-center gap-4 text-xl">
-                        <i data-lucide="file-text" class="w-7 h-7"></i>
-                        GERAR MINUTA
-                    </button>
-                    
+                    <div id="gleba-panel" class="md:col-span-2 grid grid-cols-2 gap-3 bg-indigo-50 p-3 rounded border border-indigo-100 hidden">
+                        <div class="col-span-2 text-[10px] uppercase font-bold text-indigo-700">
+                             Fator Gleba (Art. 234)
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Testada</label>
+                            <input type="number" id="in-testada" class="w-full p-1 border border-indigo-300 rounded text-sm" placeholder="Ex: 12.00" oninput="calcular()">
+                        </div>
+                        <div class="text-right pt-2">
+                            <div class="text-[9px] text-slate-500">Profundidade: <span id="out-prof" class="font-bold">0m</span></div>
+                            <div class="text-xs text-indigo-700 font-bold mt-1">A. Tributável: <span id="out-att">0,00</span> m²</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Situação (K<sub>s</sub>)</label>
+                        <select id="in-ks" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.20">Mais de uma frente (1.2)</option>
+                            <option value="1.00">Condomínio Horizontal (1.0)</option>
+                            <option value="1.00" selected>Uma frente (1.0)</option>
+                            <option value="0.80">Aglomerado (0.8)</option>
+                            <option value="0.80">Conjunto popular (0.8)</option>
+                            <option value="0.80">Encravado (0.8)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Topografia (K<sub>d</sub>)</label>
+                        <select id="in-kd" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.00" selected>Plano (1.0)</option>
+                            <option value="0.90">Aclive (0.9)</option>
+                            <option value="0.80">Irregular/Acidentado (0.8)</option>
+                            <option value="0.90">Declive (0.9)</option>
+                            <option value="0.80">Declive acentuado (0.8)</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Pedologia (K<sub>p</sub>)</label>
+                        <select id="in-kp" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.00" selected>Firme (1.0)</option>
+                            <option value="0.90">Arenoso (0.9)</option>
+                            <option value="0.90">Inundável / terreno baixo (0.9)</option>
+                            <option value="0.90">Rochoso/duna (0.9)</option>
+                            <option value="0.80">Alagado/mangue (0.8)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-1">
-                <div class="sticky top-8">
-                    <div class="bg-gradient-to-b from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-8 text-white mb-6">
-                        <div class="flex items-center justify-between mb-8">
-                            <h2 class="text-2xl font-bold">
-                                <i data-lucide="scroll-text" class="w-7 h-7 inline-block mr-3 text-green-400"></i>
-                                RESULTADOS
-                            </h2>
-                            <span class="bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
-                                SIMULAÇÃO
-                            </span>
+            <div class="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+                <div class="bg-slate-50 p-3 border-b border-slate-200 flex items-center gap-2">
+                    <i data-lucide="home" class="w-5 h-5 text-orange-600"></i>
+                    <h2 class="font-bold text-slate-800 text-sm uppercase">2. Edificação (VVE)</h2>
+                </div>
+                <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Área Construída (A<sub>c</sub>)</label>
+                        <div class="relative">
+                            <input type="number" id="in-ac" class="w-full text-lg font-bold p-2 border border-slate-300 rounded outline-none input-focus text-slate-700" placeholder="0.00" oninput="calcular()">
+                            <span class="absolute right-3 top-2.5 text-xs font-bold text-slate-400">m²</span>
                         </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tipo VUC (Base)</label>
+                        <select id="in-vuc" class="w-full p-2 bg-slate-50 border rounded text-xs font-bold text-slate-700" onchange="calcular()">
+                            <option value="80.00">Alvenaria/Concreto (80,00)</option>
+                            <option value="60.00">Mista (60,00)</option>
+                            <option value="45.00">Madeira/Galpão (45,00)</option>
+                        </select>
+                    </div>
 
-                        <div id="empty-results" class="text-center py-12">
-                            <div class="mb-6">
-                                <i data-lucide="bar-chart" class="w-20 h-20 mx-auto text-gray-600"></i>
-                            </div>
-                            <h3 class="text-xl font-semibold text-gray-400 mb-3">Aguardando Cálculo</h3>
-                            <p class="text-gray-500">Ajuste os valores e clique em Calcular</p>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Estrutura (K<sub>est</sub>)</label>
+                        <select id="in-kest" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.00" selected>Alvenaria/concreto (1.0)</option>
+                            <option value="1.00">Metálica (1.0)</option>
+                            <option value="0.90">Mista (0.9)</option>
+                            <option value="0.90">Fibrocimento ou /tijolos (0.9)</option>
+                            <option value="0.80">Madeira (0.8)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Conservação (K<sub>c</sub>)</label>
+                        <select id="in-kc" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.20">Ótima (1.2)</option>
+                            <option value="1.10">Muito bom (1.1)</option>
+                            <option value="1.00" selected>Boa / Normal (1.0)</option>
+                            <option value="0.80">Regular (0.8)</option>
+                            <option value="0.70">Inferior (0.7)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Idade (K<sub>i</sub>)</label>
+                        <select id="in-ki" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.10">Até 10 anos (1.1)</option>
+                            <option value="1.00" selected>De 11 a 20 anos (1.0)</option>
+                            <option value="0.80">De 21 a 50 anos (0.8)</option>
+                            <option value="0.60">Mais de 50 anos (0.6)</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Padrão (K<sub>pa</sub>)</label>
+                        <select id="in-kpa" class="w-full p-2 bg-slate-50 border rounded text-xs font-medium" onchange="calcular()">
+                            <option value="1.20">Alto (1.2)</option>
+                            <option value="1.10">Muito bom (1.1)</option>
+                            <option value="1.00" selected>Bom (1.0)</option>
+                            <option value="0.90">Regular (0.9)</option>
+                            <option value="0.70">Baixo (0.7)</option>
+                            <option value="0.60">Popular (0.6)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="gerarMinuta()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3">
+                <i data-lucide="file-text"></i>
+                GERAR PROJETO DE LEI (MINUTA)
+            </button>
+        </div>
+
+        <div class="lg:col-span-5 space-y-4">
+            <div class="sticky top-24 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 p-6 text-center text-white">
+                    <p class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Valor Venal Total Estimado</p>
+                    <div id="res-total-reais" class="text-4xl md:text-5xl font-black text-emerald-400">R$ 0,00</div>
+                    <div class="mt-2 inline-block bg-white/10 px-3 py-1 rounded-full text-xs font-mono text-slate-300">
+                        <span id="res-total-ufm">0.00</span> UFM
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-6">
+                    <div class="border-l-4 border-indigo-500 pl-4">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <span class="font-bold text-slate-700 text-sm">Terreno</span>
+                            <span id="res-vvt-reais" class="text-indigo-600 font-bold text-base">R$ 0,00</span>
                         </div>
-
-                        <div id="calculated-results" class="hidden">
-                            <div class="p-8 bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl border-2 border-green-500/30 shadow-2xl mb-6">
-                                <div class="text-center mb-6">
-                                    <h3 class="text-2xl font-bold text-white">VALOR VENAL TOTAL</h3>
-                                </div>
-                                <div class="text-5xl font-bold text-green-400 text-center mb-4 currency" id="result-total">R$ 0,00</div>
-                                <div class="text-2xl text-green-300 text-center" id="result-total-ufsc">0,00 UFSC</div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-blue-300 font-bold">Terreno (VVT)</span>
-                                        <span class="text-white font-bold" id="result-vvt">R$ 0,00</span>
-                                    </div>
-                                    <div class="text-xs text-gray-400 text-right" id="vvt-detalhe">
-                                        Base x AT x Ks x Kp x Kd
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-orange-300 font-bold">Construção (VVE)</span>
-                                        <span class="text-white font-bold" id="result-vvb">R$ 0,00</span>
-                                    </div>
-                                    <div class="text-xs text-gray-400 text-right" id="vvb-detalhe">
-                                        Área x VUB
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-100 text-[10px] font-mono text-slate-600 leading-relaxed break-words">
+                            <span id="log-vvt">...</span>
                         </div>
                     </div>
 
-                    <button onclick="resetCalculadora()" 
-                            class="w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition flex justify-center items-center gap-3">
-                        <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                        NOVA SIMULAÇÃO
-                    </button>
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <span class="font-bold text-slate-700 text-sm">Edificação</span>
+                            <span id="res-vve-reais" class="text-orange-600 font-bold text-base">R$ 0,00</span>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded border border-slate-100 text-[10px] font-mono text-slate-600 leading-relaxed break-words">
+                            <span id="log-vve">...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="minuta-modal" class="modal">
-        <div class="modal-content">
-            <div class="bg-gradient-to-r from-blue-900 to-blue-800 p-6 text-white rounded-t-lg flex justify-between items-center no-print">
-                <h2 class="text-2xl font-bold">
-                    <i data-lucide="file-text" class="w-8 h-8 inline-block mr-3"></i>
-                    MINUTA DA LEI PGV
-                </h2>
-                <div class="flex gap-2">
-                    <button onclick="imprimirMinuta()" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg">
-                        <i data-lucide="printer" class="w-5 h-5"></i>
-                    </button>
-                    <button onclick="fecharMinuta()" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
+    <div id="modal-minuta" class="hidden fixed inset-0 bg-black/60 z-[100] flex justify-center items-start overflow-y-auto py-10 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-[21cm] shadow-2xl relative mb-10">
             
-            <div id="minuta-texto">
-                </div>
-            
-            <div class="bg-gray-100 p-6 border-t border-gray-200 rounded-b-lg no-print">
-                <div class="flex justify-end gap-3">
-                    <button onclick="fecharMinuta()" 
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg transition">
-                        Fechar
-                    </button>
-                    <button onclick="copiarMinuta()" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition flex items-center gap-2">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                        Copiar Texto
-                    </button>
-                </div>
+            <div class="no-print absolute top-4 right-4 flex gap-2">
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-bold flex items-center gap-1 shadow">
+                    <i data-lucide="printer" class="w-3 h-3"></i> IMPRIMIR
+                </button>
+                <button onclick="document.getElementById('modal-minuta').classList.add('hidden')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-bold shadow">
+                    FECHAR
+                </button>
             </div>
+
+            <div id="conteudo-juridico" class="juridico-doc">
+                </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            
-            // Elementos DOM
-            const inputs = {
-                ufsc: document.getElementById('ufsc-valor'),
-                valorBase: document.getElementById('valor-base-ufsc'),
-                areaTerreno: document.getElementById('area-terreno'),
-                areaConstruida: document.getElementById('area-construida'),
-                ks: document.getElementById('ks-input'),
-                kp: document.getElementById('kp-input'),
-                kd: document.getElementById('kd-input'),
-                vub: document.getElementById('vub-input')
-            };
-
-            const selects = {
-                setor: document.getElementById('setor-fiscal'),
-                pavi: document.getElementById('pavimentacao'),
-                decl: document.getElementById('declividade'),
-                padr: document.getElementById('padrao-construtivo')
-            };
-
-            // Helpers de formatação
-            const fmtMoeda = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
-            // 1. Sincronizar Selects com Inputs
-            function syncSelectToInput(selectElem, inputElem) {
-                inputElem.value = selectElem.value;
-                if(inputElem === inputs.vub) atualizarPreviewVUB();
-            }
-
-            selects.setor.addEventListener('change', () => syncSelectToInput(selects.setor, inputs.ks));
-            selects.pavi.addEventListener('change', () => syncSelectToInput(selects.pavi, inputs.kp));
-            selects.decl.addEventListener('change', () => syncSelectToInput(selects.decl, inputs.kd));
-            selects.padr.addEventListener('change', () => syncSelectToInput(selects.padr, inputs.vub));
-
-            // 2. Atualizar Infos Básicas e Preview
-            function atualizarPreviewVUB() {
-                const ufsc = parseFloat(inputs.ufsc.value) || 0;
-                const vub = parseFloat(inputs.vub.value) || 0;
-                document.getElementById('vub-reais-preview').textContent = `= R$ ${fmtMoeda.format(vub * ufsc)}/m²`;
-            }
-
-            function atualizarInfosGerais() {
-                const ufsc = parseFloat(inputs.ufsc.value) || 0;
-                const base = parseFloat(inputs.valorBase.value) || 0;
-                document.getElementById('valor-base-info').textContent = `${fmtMoeda.format(base)} UFSC/m² = R$ ${fmtMoeda.format(base * ufsc)}/m²`;
-                atualizarPreviewVUB();
-            }
-
-            inputs.ufsc.addEventListener('input', atualizarInfosGerais);
-            inputs.valorBase.addEventListener('input', atualizarInfosGerais);
-            inputs.vub.addEventListener('input', atualizarPreviewVUB);
-
-            // 3. Função de Cálculo Principal
-            window.calcularValorVenal = function() {
-                const v_ufsc = parseFloat(inputs.ufsc.value) || 0;
-                const v_base = parseFloat(inputs.valorBase.value) || 0;
-                const v_at = parseFloat(inputs.areaTerreno.value) || 0;
-                const v_ac = parseFloat(inputs.areaConstruida.value) || 0;
-                
-                const k_s = parseFloat(inputs.ks.value) || 1;
-                const k_p = parseFloat(inputs.kp.value) || 1;
-                const k_d = parseFloat(inputs.kd.value) || 1;
-                const v_vub = parseFloat(inputs.vub.value) || 0;
-
-                if (v_at === 0) { alert('Informe a área do terreno.'); return; }
-
-                // Cálculos
-                const vvt_ufsc = v_base * v_at * k_s * k_p * k_d;
-                const vvb_ufsc = v_ac * v_vub;
-                const total_ufsc = vvt_ufsc + vvb_ufsc;
-
-                const vvt_reais = vvt_ufsc * v_ufsc;
-                const vvb_reais = vvb_ufsc * v_ufsc;
-                const total_reais = total_ufsc * v_ufsc;
-
-                // Exibir
-                document.getElementById('empty-results').style.display = 'none';
-                document.getElementById('calculated-results').classList.remove('hidden');
-
-                document.getElementById('result-total').textContent = `R$ ${fmtMoeda.format(total_reais)}`;
-                document.getElementById('result-total-ufsc').textContent = `${fmtMoeda.format(total_ufsc)} UFSC`;
-                
-                document.getElementById('result-vvt').textContent = `R$ ${fmtMoeda.format(vvt_reais)}`;
-                document.getElementById('result-vvb').textContent = `R$ ${fmtMoeda.format(vvb_reais)}`;
-                
-                document.getElementById('vvt-detalhe').textContent = 
-                    `${fmtMoeda.format(v_base)} x ${v_at} x ${k_s} x ${k_p} x ${k_d} = ${fmtMoeda.format(vvt_ufsc)} UFSC`;
-                
-                document.getElementById('vvb-detalhe').textContent = 
-                    `${v_ac}m² x ${fmtMoeda.format(v_vub)} = ${fmtMoeda.format(vvb_ufsc)} UFSC`;
-            };
-
-            window.resetCalculadora = function() {
-                inputs.areaTerreno.value = '';
-                inputs.areaConstruida.value = '';
-                syncSelectToInput(selects.setor, inputs.ks);
-                syncSelectToInput(selects.pavi, inputs.kp);
-                syncSelectToInput(selects.decl, inputs.kd);
-                syncSelectToInput(selects.padr, inputs.vub);
-                
-                document.getElementById('empty-results').style.display = 'block';
-                document.getElementById('calculated-results').classList.add('hidden');
-            };
-
-            // 4. NOVA FUNÇÃO: Gerar Minuta Jurídica (Baseada no PDF)
-            window.gerarMinuta = function() {
-                const ufsc = parseFloat(inputs.ufsc.value) || 0;
-                const base = parseFloat(inputs.valorBase.value) || 0;
-                const hoje = new Date();
-                const dataExtenso = hoje.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-                const ano = hoje.getFullYear();
-
-                // Função para extrair dados dos selects e criar tabelas
-                function gerarTabelaDeSelect(selectId, labelCol1, labelCol2) {
-                    const select = document.getElementById(selectId);
-                    let rows = '';
-                    for (let opt of select.options) {
-                        rows += `<tr><td>${opt.text.split('-')[0].trim()}</td><td>${opt.value.replace('.', ',')}</td></tr>`;
-                    }
-                    return `
-                        <table>
-                            <thead><tr><th>${labelCol1}</th><th>VALOR / FATOR (${labelCol2})</th></tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>
-                    `;
-                }
-
-                // Construção do Texto Legal
-                const minuta = `
-                    <div class="minuta-legal">
-                        <h2>MINUTA DE PROJETO DE LEI Nº ____/${ano}</h2>
-                        
-                        <div class="ementa">
-                            <p>Institui a nova Planta Genérica de Valores (PGV) do Município de São José do Cerrito, 
-                            estabelece a metodologia para apuração do valor venal dos imóveis urbanos 
-                            para fins de lançamento do IPTU e ITBI, e dá outras providências.</p>
-                        </div>
-
-                        <p><strong>O PREFEITO DO MUNICÍPIO DE SÃO JOSÉ DO CERRITO</strong>, no uso de suas atribuições legais, faz saber que a Câmara Municipal aprovou e ele sanciona a seguinte Lei:</p>
-
-                        <h3>CAPÍTULO I - DO OBJETO E DA FINALIDADE</h3>
-
-                        <p><span class="artigo">Art. 1º</span> Fica instituída, por esta Lei, a Planta Genérica de Valores (PGV) do Município, para o fim de estabelecer os critérios e a metodologia de apuração do valor venal dos imóveis situados na zona urbana.</p>
-
-                        <p><span class="artigo">Art. 2º</span> O valor venal, apurado na forma desta Lei, será a base de cálculo para o lançamento dos seguintes tributos municipais:</p>
-                        <span class="inciso">I - Imposto sobre a Propriedade Predial e Territorial Urbana (IPTU);</span>
-                        <span class="inciso">II - Imposto sobre a Transmissão "Inter Vivos" de Bens Imóveis (ITBI).</span>
-
-                        <h3>CAPÍTULO II - DA METODOLOGIA DE AVALIAÇÃO</h3>
-
-                        <p><span class="artigo">Art. 3º</span> O valor venal dos imóveis será apurado pela soma do valor venal do terreno com o valor venal da edificação, conforme a seguinte fórmula geral:</p>
-                        <div class="formula-box">Valor Venal Total = VVT + VVE</div>
-
-                        <h4>Seção I - Do Valor Venal do Terreno (VVT)</h4>
-
-                        <p><span class="artigo">Art. 4º</span> O Valor Venal do Terreno (VVT) será calculado pela aplicação da seguinte fórmula:</p>
-                        <div class="formula-box">
-                            VVT = A<sub>t</sub> x V<sub>base</sub> x K<sub>s</sub> x K<sub>p</sub> x K<sub>d</sub>
-                        </div>
-                        <p>Onde:</p>
-                        <span class="inciso">I - A<sub>t</sub>: Área do Terreno em metros quadrados;</span>
-                        <span class="inciso">II - V<sub>base</sub>: Valor do Terreno base por m² (em UFSC);</span>
-                        <span class="inciso">III - K<sub>s</sub>: Fator de Correção de Setorização;</span>
-                        <span class="inciso">IV - K<sub>p</sub>: Fator de Correção de Pavimentação;</span>
-                        <span class="inciso">V - K<sub>d</sub>: Fator de Correção de Declividade.</span>
-
-                        <p><span class="artigo">Art. 5º</span> O Valor Base do Terreno fica fixado em <strong>${fmtMoeda.format(base)} UFSC/m²</strong>, correspondente nesta data a R$ ${fmtMoeda.format(base * ufsc)}/m².</p>
-                        <p style="font-size: 10pt;">Parágrafo único. A atualização do valor da UFSC será aplicada automaticamente a cada exercício fiscal.</p>
-
-                        <p><span class="artigo">Art. 6º</span> Os Fatores de Correção (K<sub>s</sub>, K<sub>p</sub> e K<sub>d</sub>) serão aplicados de acordo com as características do imóvel, conforme tabelas constantes nos Anexos desta Lei.</p>
-
-                        <h4>Seção II - Do Valor Venal da Edificação (VVE)</h4>
-
-                        <p><span class="artigo">Art. 7º</span> O Valor Venal da Edificação (VVE) será calculado pela aplicação da seguinte fórmula:</p>
-                        <div class="formula-box">VVE = VUC x A<sub>e</sub></div>
-                        <p>Onde:</p>
-                        <span class="inciso">I - VUC: Valor Unitário de Construção por metro quadrado (baseado no Padrão);</span>
-                        <span class="inciso">II - A<sub>e</sub>: Área da Edificação em metros quadrados.</span>
-
-                        <h3>CAPÍTULO III - DOS ANEXOS</h3>
-
-                        <p><span class="artigo">Art. 8º</span> Integram a presente Lei os Anexos I, II, III e IV, que detalham, respectivamente:</p>
-                        <span class="inciso">I - A Tabela de Setorização (Fator K<sub>s</sub>);</span>
-                        <span class="inciso">II - A Tabela de Pavimentação (Fator K<sub>p</sub>);</span>
-                        <span class="inciso">III - A Tabela de Declividade (Fator K<sub>d</sub>);</span>
-                        <span class="inciso">IV - A Tabela de Valores Unitários de Construção (VUC).</span>
-
-                        <h3>CAPÍTULO IV - DAS DISPOSIÇÕES FINAIS</h3>
-
-                        <p><span class="artigo">Art. 9º</span> Esta Lei entra em vigor na data de sua publicação, produzindo seus efeitos a partir de 1º de janeiro de ${ano + 1}.</p>
-
-                        <div class="assinatura">
-                            <p>Gabinete do Prefeito, ${dataExtenso}.</p>
-                            <br><br><br>
-                            <p>___________________________________________<br>
-                            <strong>PREFEITO MUNICIPAL</strong></p>
-                        </div>
-
-                        <div style="page-break-before: always;"></div>
-                        
-                        <h3 style="text-align:center; margin-top: 50px;">ANEXOS DA LEI</h3>
-                        
-                        <h4>ANEXO I - TABELA DE SETORIZAÇÃO (K<sub>s</sub>)</h4>
-                        ${gerarTabelaDeSelect('setor-fiscal', 'SETOR FISCAL', 'Fator Ks')}
-
-                        <h4>ANEXO II - TABELA DE PAVIMENTAÇÃO (K<sub>p</sub>)</h4>
-                        ${gerarTabelaDeSelect('pavimentacao', 'TIPO DE PAVIMENTAÇÃO', 'Fator Kp')}
-
-                        <h4>ANEXO III - TABELA DE DECLIVIDADE (K<sub>d</sub>)</h4>
-                        ${gerarTabelaDeSelect('declividade', 'TOPOGRAFIA', 'Fator Kd')}
-
-                        <h4>ANEXO IV - VALORES UNITÁRIOS DE CONSTRUÇÃO (VUC)</h4>
-                        ${gerarTabelaDeSelect('padrao-construtivo', 'PADRÃO CONSTRUTIVO', 'UFSC/m²')}
-                    </div>
-                `;
-                
-                document.getElementById('minuta-texto').innerHTML = minuta;
-                document.getElementById('minuta-modal').style.display = 'block';
-            };
-
-            window.fecharMinuta = () => document.getElementById('minuta-modal').style.display = 'none';
-            window.imprimirMinuta = () => window.print();
-            window.copiarMinuta = () => {
-                const text = document.getElementById('minuta-texto').innerText;
-                navigator.clipboard.writeText(text).then(() => alert('Conteúdo copiado para a área de transferência!'));
-            };
-
-            window.onclick = (e) => {
-                if(e.target == document.getElementById('minuta-modal')) fecharMinuta();
-            };
-
-            // Inicialização
-            atualizarInfosGerais();
+        document.addEventListener("DOMContentLoaded", () => {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+            calcular();
         });
+
+        function toggleGleba() {
+            const painel = document.getElementById('gleba-panel');
+            const checkbox = document.getElementById('toggle-gleba');
+            if(checkbox.checked) {
+                painel.classList.remove('hidden');
+                painel.classList.add('grid');
+            } else {
+                painel.classList.add('hidden');
+                painel.classList.remove('grid');
+                document.getElementById('in-testada').value = '';
+            }
+            calcular();
+        }
+
+        const getVal = (id) => parseFloat(document.getElementById(id).value.replace(',', '.')) || 0;
+        const fmtMoney = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const fmtNum = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function calcular() {
+            // Globais
+            const ufm = getVal('cfg-ufm');
+            const baseUfm = getVal('cfg-base-ufm');
+
+            // --- 1. TERRENO ---
+            const at = getVal('in-at');
+            const ks = getVal('in-ks');
+            const kd = getVal('in-kd'); 
+            const kp = getVal('in-kp'); 
+            
+            // Gleba
+            const isGleba = document.getElementById('toggle-gleba').checked;
+            const testada = getVal('in-testada');
+            let att = at;
+            let profundidade = 0;
+
+            if (isGleba && at > 0 && testada > 0) {
+                profundidade = at / testada;
+                if (profundidade > 30) {
+                    const areaPadrao = testada * 30; 
+                    const excedente = at - areaPadrao;
+                    att = areaPadrao + (excedente * 0.50); 
+                }
+            }
+
+            document.getElementById('out-prof').textContent = fmtNum(profundidade) + "m";
+            document.getElementById('out-att').textContent = fmtNum(att);
+
+            // Fórmula Terreno
+            const pontosTerreno = att * baseUfm * ks * kp * kd;
+            const vvt = pontosTerreno * ufm;
+
+            // --- 2. EDIFICAÇÃO ---
+            const ac = getVal('in-ac');
+            const vuc = getVal('in-vuc');
+            const kest = getVal('in-kest');
+            const kc = getVal('in-kc');
+            const ki = getVal('in-ki');
+            const kpa = getVal('in-kpa');
+
+            // Fórmula Edificação
+            const pontosEdificacao = ac * vuc * kest * kc * ki * kpa;
+            const vve = pontosEdificacao * ufm;
+
+            // --- TOTAIS ---
+            const total = vvt + vve;
+            const totalUfm = pontosTerreno + pontosEdificacao;
+
+            // --- RENDERIZAR ---
+            document.getElementById('res-total-reais').textContent = fmtMoney(total);
+            document.getElementById('res-total-ufm').textContent = fmtNum(totalUfm);
+
+            document.getElementById('res-vvt-reais').textContent = fmtMoney(vvt);
+            document.getElementById('log-vvt').innerHTML = 
+                `A<sub>t</sub>${fmtNum(att)} x Base ${fmtNum(baseUfm)} x K<sub>s</sub>${ks} x K<sub>d</sub>${kd} x K<sub>p</sub>${kp} = <strong>${fmtNum(pontosTerreno)}</strong>`;
+
+            document.getElementById('res-vve-reais').textContent = fmtMoney(vve);
+            document.getElementById('log-vve').innerHTML = 
+                `A<sub>c</sub>${fmtNum(ac)} x VUC ${vuc} x K<sub>est</sub>${kest} x K<sub>c</sub>${kc} x K<sub>i</sub>${ki} x K<sub>pa</sub>${kpa} = <strong>${fmtNum(pontosEdificacao)}</strong>`;
+        }
+
+        function gerarMinuta() {
+            calcular(); 
+            const ano = 2026;
+            const ufm = getVal('cfg-ufm');
+            const baseUfm = getVal('cfg-base-ufm');
+            const urlBrasao = "https://upload.wikimedia.org/wikipedia/commons/b/b0/Brasao_Sao_Jose_do_Cerrito.png";
+
+            const html = `
+                <div class="juridico-header">
+                    <img src="${urlBrasao}" alt="Brasão">
+                    <h1>PREFEITURA MUNICIPAL DE SÃO JOSÉ DO CERRITO</h1>
+                    <p>Gabinete do Prefeito</p>
+                </div>
+
+                <div class="ementa">
+                    <strong>PROJETO DE LEI COMPLEMENTAR Nº ____/${ano}.</strong><br>
+                    "Dispõe sobre a atualização da Planta Genérica de Valores (PGV), fixa a Unidade Fiscal Municipal (UFM), estabelece a metodologia de apuração do Valor Venal de imóveis urbanos para fins de lançamento do IPTU e ITBI, em consonância com a Lei Complementar nº 07/2006, e dá outras providências."
+                </div>
+
+                <p><strong>O PREFEITO DO MUNICÍPIO DE SÃO JOSÉ DO CERRITO</strong>, Estado de Santa Catarina, no uso de suas atribuições legais conferidas pela Lei Orgânica Municipal;</p>
+
+                <p><strong>CONSIDERANDO</strong> a necessidade de atualizar a base de cálculo tributária para promover a Justiça Fiscal, observando os princípios da capacidade contributiva e da vedação ao confisco;</p>
+
+                <p><strong>CONSIDERANDO</strong> o disposto nos Artigos 232 e 234 da Lei Complementar nº 07/2006;</p>
+
+                <p><strong>FAZ SABER</strong> que a Câmara Municipal aprovou e ele sanciona a seguinte <strong>LEI COMPLEMENTAR:</strong></p>
+
+                <h2>CAPÍTULO I - DOS VALORES DE REFERÊNCIA</h2>
+
+                <p><span class="artigo">Art. 1º.</span> Fica autorizado o poder executivo e atualizar anualmente o valor da unidade fiscal municipal (UFM) por meio de decreto.</p>
+                <p><span class="artigo">Art. 2º.</span> O Valor Base de Terreno (V<sub>b</sub>) padrão para a zona urbana é fixado em <strong>${fmtNum(baseUfm)} UFM</strong> por metro quadrado.</p>
+
+                <h2>CAPÍTULO II - DA METODOLOGIA DE CÁLCULO</h2>
+
+                <h3>Seção I - Do Valor Venal do Terreno (VVT)</h3>
+                <p><span class="artigo">Art. 3º.</span> O VVT será apurado mediante a fórmula:</p>
+                <div class="formula-box">
+                    VVT = (A<sub>t</sub> &times; V<sub>b</sub> &times; K<sub>s</sub> &times; K<sub>p</sub> &times; K<sub>d</sub>) &times; Valor UFM
+                </div>
+                
+                <p>§ 1º. Para terrenos com profundidade média superior a 30 metros, a Área Tributável (A<sub>t</sub>) será calculada conforme as regras de redução de Gleba (Art. 234 da LC 07/2006).</p>
+
+                <p>§ 2º. Aplicam-se os seguintes fatores corretivos:</p>
+                
+                <p>a) Correção quanto à Situação do terreno:</p>
+                <table class="tabela-legal">
+                    <tr><th>Situação (K<sub>s</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Mais de uma frente</td><td>1,2</td></tr>
+                    <tr><td>Condomínio Horizontal</td><td>1,0</td></tr>
+                    <tr><td>Uma frente</td><td>1,0</td></tr>
+                    <tr><td>Aglomerado</td><td>0,8</td></tr>
+                    <tr><td>Conjunto popular</td><td>0,8</td></tr>
+                    <tr><td>Encravado</td><td>0,8</td></tr>
+                </table>
+                
+                <p>b) Correção quanto à Topografia do terreno:</p>
+                <table class="tabela-legal">
+                    <tr><th>Topografia (K<sub>d</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Plano</td><td>1,0</td></tr>
+                    <tr><td>Aclive</td><td>0,9</td></tr>
+                    <tr><td>Irregular/Acidentado</td><td>0,8</td></tr>
+                    <tr><td>Declive</td><td>0,9</td></tr>
+                    <tr><td>Declive acentuado</td><td>0,8</td></tr>
+                </table>
+
+                <p>c) Correção quanto à Pedologia do terreno:</p>
+                <table class="tabela-legal">
+                    <tr><th>Pedologia (K<sub>p</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Firme</td><td>1,0</td></tr>
+                    <tr><td>Arenoso</td><td>0,9</td></tr>
+                    <tr><td>Inundável / terreno baixo</td><td>0,9</td></tr>
+                    <tr><td>Rochoso/duna</td><td>0,9</td></tr>
+                    <tr><td>Alagado/mangue</td><td>0,8</td></tr>
+                </table>
+
+                <h3>Seção II - Do Valor Venal da Edificação (VVE)</h3>
+                <p><span class="artigo">Art. 4º.</span> O VVE será obtido pela fórmula:</p>
+                <div class="formula-box">
+                    VVE = (A<sub>c</sub> &times; VUC &times; K<sub>est</sub> &times; K<sub>c</sub> &times; K<sub>i</sub> &times; K<sub>pa</sub>) &times; Valor UFM
+                </div>
+
+                <p>§ 1º. O Valor Unitário de Custo (VUC) obedece à Tabela D:</p>
+                <table class="tabela-legal">
+                    <tr><th>Tipo de Edificação</th><th>UFM/m²</th></tr>
+                    <tr><td>Alvenaria / Concreto</td><td>80,00</td></tr>
+                    <tr><td>Mista</td><td>60,00</td></tr>
+                    <tr><td>Madeira / Galpão</td><td>45,00</td></tr>
+                </table>
+
+                <p>§ 2º. Aplicam-se os seguintes fatores corretivos à edificação:</p>
+
+                <p>d) Correção quanto à Estrutura da edificação:</p>
+                <table class="tabela-legal">
+                    <tr><th>Estrutura (K<sub>est</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Alvenaria/concreto</td><td>1,0</td></tr>
+                    <tr><td>Metálica</td><td>1,0</td></tr>
+                    <tr><td>Mista</td><td>0,9</td></tr>
+                    <tr><td>Fibrocimento ou /tijolos</td><td>0,9</td></tr>
+                    <tr><td>Madeira</td><td>0,8</td></tr>
+                </table>
+
+                <p>e) Correção quanto ao Estado de Conservação:</p>
+                <table class="tabela-legal">
+                    <tr><th>Estado (K<sub>c</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Ótima</td><td>1,2</td></tr>
+                    <tr><td>Muito bom</td><td>1,1</td></tr>
+                    <tr><td>Boa / Normal</td><td>1,0</td></tr>
+                    <tr><td>Regular</td><td>0,8</td></tr>
+                    <tr><td>Inferior</td><td>0,7</td></tr>
+                </table>
+
+                <p>f) Correção quanto à Idade da construção:</p>
+                <table class="tabela-legal">
+                    <tr><th>Faixa de Idade (K<sub>i</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Até 10 anos</td><td>1,1</td></tr>
+                    <tr><td>De 11 a 20 anos</td><td>1,0</td></tr>
+                    <tr><td>De 21 a 50 anos</td><td>0,8</td></tr>
+                    <tr><td>Mais de 50 anos</td><td>0,6</td></tr>
+                </table>
+
+                <p>g) Correção quanto ao Padrão da edificação:</p>
+                <table class="tabela-legal">
+                    <tr><th>Padrão (K<sub>pa</sub>)</th><th>Índice</th></tr>
+                    <tr><td>Alto</td><td>1,2</td></tr>
+                    <tr><td>Muito bom</td><td>1,1</td></tr>
+                    <tr><td>Bom</td><td>1,0</td></tr>
+                    <tr><td>Regular</td><td>0,9</td></tr>
+                    <tr><td>Baixo</td><td>0,7</td></tr>
+                    <tr><td>Popular</td><td>0,6</td></tr>
+                </table>
+
+                <h2>CAPÍTULO III - DISPOSIÇÕES FINAIS</h2>
+                <p><span class="artigo">Art. 5º.</span> Esta Lei entra em vigor na data de sua publicação.</p>
+
+                <div style="text-align: center; margin-top: 60px;">
+                    São José do Cerrito, ${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}.
+                    <br><br><br>
+                    __________________________________________<br>
+                    <strong>PREFEITO MUNICIPAL</strong>
+                </div>
+            `;
+            
+            document.getElementById('conteudo-juridico').innerHTML = html;
+            document.getElementById('modal-minuta').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
-
-
-
-
