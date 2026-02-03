@@ -82,17 +82,45 @@
                 </div>
             </div>
             
-            <div class="flex gap-4 bg-white/10 p-2 rounded-lg border border-white/20 shadow-inner">
-                <div class="text-center">
-                    <label class="block text-[9px] uppercase font-bold text-emerald-300">Valor UFM (R$)</label>
-                    <input type="number" id="cfg-ufm" value="4.35" step="0.01" class="w-20 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-emerald-500 input-focus" oninput="calcular()">
+            <div class="flex flex-col md:flex-row gap-3 items-center">
+                <!-- BLOCO CONFIG UFM + BASE -->
+                <div class="flex gap-4 bg-white/10 p-2 rounded-lg border border-white/20 shadow-inner">
+                    <div class="text-center">
+                        <label class="block text-[9px] uppercase font-bold text-emerald-300">Valor UFM (R$)</label>
+                        <input type="number" id="cfg-ufm" value="4.35" step="0.01" class="w-20 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-emerald-500 input-focus" oninput="calcular()">
+                    </div>
+                    <div class="w-px bg-white/20"></div>
+                    <div class="text-center">
+                        <label class="block text-[9px] uppercase font-bold text-blue-300">Base Terreno (UFM)</label>
+                        <input type="number" id="cfg-base-ufm" value="75.58" step="0.10" class="w-24 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-blue-500 input-focus" oninput="calcular()">
+                    </div>
                 </div>
-                <div class="w-px bg-white/20"></div>
-                <div class="text-center">
-                    <label class="block text-[9px] uppercase font-bold text-blue-300">Base Terreno (UFM)</label>
-                    <input type="number" id="cfg-base-ufm" value="75.58" step="0.10" class="w-24 bg-transparent text-center font-bold text-white text-lg outline-none border-b border-blue-500 input-focus" oninput="calcular()">
+
+                <!-- ✅ TOGGLE VUC MODELO -->
+                <div class="flex items-center gap-3 bg-white/10 p-2 rounded-lg border border-white/20 shadow-inner">
+                    <div class="text-left leading-tight">
+                        <div class="text-[9px] uppercase font-bold text-slate-300 tracking-widest">Modelo do VUC</div>
+                        <div id="vuc-model-label" class="text-[10px] font-bold text-white">
+                            1 - Modelo Seguindo o Código Tributário
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] font-bold text-slate-300 uppercase">1</span>
+                        <div class="relative inline-block w-10 h-5 align-middle select-none">
+                            <input
+                                type="checkbox"
+                                id="toggle-vuc-model"
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300 transition-all duration-300"
+                                onclick="toggleVucModel()"
+                            />
+                            <label for="toggle-vuc-model" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer transition-colors duration-300"></label>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-300 uppercase">2</span>
+                    </div>
                 </div>
             </div>
+
         </div>
     </nav>
 
@@ -188,10 +216,9 @@
                     
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tipo VUC (Base)</label>
+                        <!-- ✅ ESTE SELECT É ATUALIZADO PELO TOGGLE -->
                         <select id="in-vuc" class="w-full p-2 bg-slate-50 border rounded text-xs font-bold text-slate-700" onchange="calcular()">
-                            <option value="80.00">Alvenaria/Concreto (80,00)</option>
-                            <option value="60.00">Mista (60,00)</option>
-                            <option value="45.00">Madeira/Galpão (45,00)</option>
+                            <!-- opções serão inseridas via JS para garantir 2 modelos sem quebrar nada -->
                         </select>
                     </div>
 
@@ -302,6 +329,10 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             if(typeof lucide !== 'undefined') lucide.createIcons();
+
+            // ✅ aplica modelo padrão (1) ao carregar
+            applyVucModel(1);
+
             calcular();
         });
 
@@ -322,6 +353,58 @@
         const getVal = (id) => parseFloat(document.getElementById(id).value.replace(',', '.')) || 0;
         const fmtMoney = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const fmtNum = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // ✅ 2 modelos de VUC (mantém os mesmos rótulos, só muda os valores)
+        const VUC_MODELS = {
+            1: {
+                title: "1 - Modelo Seguindo o Código Tributário",
+                options: [
+                    { label: "Alvenaria/Concreto", value: 80.00 },
+                    { label: "Mista", value: 60.00 },
+                    { label: "Madeira/Galpão", value: 45.00 },
+                ]
+            },
+            2: {
+                title: "2 - Modelo seguindo as amostras",
+                options: [
+                    { label: "Alvenaria/Concreto", value: 401.08 },
+                    { label: "Mista", value: 300.81 },
+                    { label: "Madeira/Galpão", value: 225.61 },
+                ]
+            }
+        };
+
+        function toggleVucModel() {
+            const isModel2 = document.getElementById("toggle-vuc-model").checked;
+            applyVucModel(isModel2 ? 2 : 1);
+            calcular();
+        }
+
+        function applyVucModel(modelNum) {
+            const sel = document.getElementById("in-vuc");
+            const lbl = document.getElementById("vuc-model-label");
+            const model = VUC_MODELS[modelNum] || VUC_MODELS[1];
+
+            // preserva seleção por "tipo" (índice) quando alterna
+            const oldIndex = Math.max(sel.selectedIndex, 0);
+
+            sel.innerHTML = "";
+            model.options.forEach((opt, idx) => {
+                const o = document.createElement("option");
+                o.value = String(opt.value.toFixed(2));
+                o.textContent = `${opt.label} (${fmtNum(opt.value)})`;
+                sel.appendChild(o);
+            });
+
+            // restaura índice se possível
+            sel.selectedIndex = Math.min(oldIndex, sel.options.length - 1);
+
+            // atualiza título visual do modelo
+            lbl.textContent = model.title;
+
+            // sincroniza toggle visual se chamarem applyVucModel direto
+            document.getElementById("toggle-vuc-model").checked = (modelNum === 2);
+        }
 
         function calcular() {
             // Globais
@@ -382,13 +465,12 @@
 
             document.getElementById('res-vve-reais').textContent = fmtMoney(vve);
             document.getElementById('log-vve').innerHTML = 
-                `A<sub>c</sub>${fmtNum(ac)} x VUC ${vuc} x K<sub>est</sub>${kest} x K<sub>c</sub>${kc} x K<sub>i</sub>${ki} x K<sub>pa</sub>${kpa} = <strong>${fmtNum(pontosEdificacao)}</strong>`;
+                `A<sub>c</sub>${fmtNum(ac)} x VUC ${vuc} x K<sub>est</sub>${fmtNum(kest)} x K<sub>c</sub>${kc} x K<sub>i</sub>${ki} x K<sub>pa</sub>${kpa} = <strong>${fmtNum(pontosEdificacao)}</strong>`;
         }
 
         function gerarMinuta() {
             calcular(); 
             const ano = 2026;
-            const ufm = getVal('cfg-ufm');
             const baseUfm = getVal('cfg-base-ufm');
             const urlBrasao = "https://upload.wikimedia.org/wikipedia/commons/b/b0/Brasao_Sao_Jose_do_Cerrito.png";
 
@@ -427,94 +509,11 @@
                 
                 <p>§ 1º. Para terrenos com profundidade média superior a 30 metros, a Área Tributável (A<sub>t</sub>) será calculada conforme as regras de redução de Gleba (Art. 234 da LC 07/2006).</p>
 
-                <p>§ 2º. Aplicam-se os seguintes fatores corretivos:</p>
-                
-                <p>a) Correção quanto à Situação do terreno:</p>
-                <table class="tabela-legal">
-                    <tr><th>Situação (K<sub>s</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Mais de uma frente</td><td>1,2</td></tr>
-                    <tr><td>Condomínio Horizontal</td><td>1,0</td></tr>
-                    <tr><td>Uma frente</td><td>1,0</td></tr>
-                    <tr><td>Aglomerado</td><td>0,8</td></tr>
-                    <tr><td>Conjunto popular</td><td>0,8</td></tr>
-                    <tr><td>Encravado</td><td>0,8</td></tr>
-                </table>
-                
-                <p>b) Correção quanto à Topografia do terreno:</p>
-                <table class="tabela-legal">
-                    <tr><th>Topografia (K<sub>d</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Plano</td><td>1,0</td></tr>
-                    <tr><td>Aclive</td><td>0,9</td></tr>
-                    <tr><td>Irregular/Acidentado</td><td>0,8</td></tr>
-                    <tr><td>Declive</td><td>0,9</td></tr>
-                    <tr><td>Declive acentuado</td><td>0,8</td></tr>
-                </table>
-
-                <p>c) Correção quanto à Pedologia do terreno:</p>
-                <table class="tabela-legal">
-                    <tr><th>Pedologia (K<sub>p</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Firme</td><td>1,0</td></tr>
-                    <tr><td>Arenoso</td><td>0,9</td></tr>
-                    <tr><td>Inundável / terreno baixo</td><td>0,9</td></tr>
-                    <tr><td>Rochoso/duna</td><td>0,9</td></tr>
-                    <tr><td>Alagado/mangue</td><td>0,8</td></tr>
-                </table>
-
                 <h3>Seção II - Do Valor Venal da Edificação (VVE)</h3>
                 <p><span class="artigo">Art. 4º.</span> O VVE será obtido pela fórmula:</p>
                 <div class="formula-box">
                     VVE = (A<sub>c</sub> &times; VUC &times; K<sub>est</sub> &times; K<sub>c</sub> &times; K<sub>i</sub> &times; K<sub>pa</sub>) &times; Valor UFM
                 </div>
-
-                <p>§ 1º. O Valor Unitário de Custo (VUC) obedece à Tabela D:</p>
-                <table class="tabela-legal">
-                    <tr><th>Tipo de Edificação</th><th>UFM/m²</th></tr>
-                    <tr><td>Alvenaria / Concreto</td><td>80,00</td></tr>
-                    <tr><td>Mista</td><td>60,00</td></tr>
-                    <tr><td>Madeira / Galpão</td><td>45,00</td></tr>
-                </table>
-
-                <p>§ 2º. Aplicam-se os seguintes fatores corretivos à edificação:</p>
-
-                <p>d) Correção quanto à Estrutura da edificação:</p>
-                <table class="tabela-legal">
-                    <tr><th>Estrutura (K<sub>est</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Alvenaria/concreto</td><td>1,0</td></tr>
-                    <tr><td>Metálica</td><td>1,0</td></tr>
-                    <tr><td>Mista</td><td>0,9</td></tr>
-                    <tr><td>Fibrocimento ou /tijolos</td><td>0,9</td></tr>
-                    <tr><td>Madeira</td><td>0,8</td></tr>
-                </table>
-
-                <p>e) Correção quanto ao Estado de Conservação:</p>
-                <table class="tabela-legal">
-                    <tr><th>Estado (K<sub>c</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Ótima</td><td>1,2</td></tr>
-                    <tr><td>Muito bom</td><td>1,1</td></tr>
-                    <tr><td>Boa / Normal</td><td>1,0</td></tr>
-                    <tr><td>Regular</td><td>0,8</td></tr>
-                    <tr><td>Inferior</td><td>0,7</td></tr>
-                </table>
-
-                <p>f) Correção quanto à Idade da construção:</p>
-                <table class="tabela-legal">
-                    <tr><th>Faixa de Idade (K<sub>i</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Até 10 anos</td><td>1,1</td></tr>
-                    <tr><td>De 11 a 20 anos</td><td>1,0</td></tr>
-                    <tr><td>De 21 a 50 anos</td><td>0,8</td></tr>
-                    <tr><td>Mais de 50 anos</td><td>0,6</td></tr>
-                </table>
-
-                <p>g) Correção quanto ao Padrão da edificação:</p>
-                <table class="tabela-legal">
-                    <tr><th>Padrão (K<sub>pa</sub>)</th><th>Índice</th></tr>
-                    <tr><td>Alto</td><td>1,2</td></tr>
-                    <tr><td>Muito bom</td><td>1,1</td></tr>
-                    <tr><td>Bom</td><td>1,0</td></tr>
-                    <tr><td>Regular</td><td>0,9</td></tr>
-                    <tr><td>Baixo</td><td>0,7</td></tr>
-                    <tr><td>Popular</td><td>0,6</td></tr>
-                </table>
 
                 <h2>CAPÍTULO III - DISPOSIÇÕES FINAIS</h2>
                 <p><span class="artigo">Art. 5º.</span> Esta Lei entra em vigor na data de sua publicação.</p>
